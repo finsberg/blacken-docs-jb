@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import black
-
 import blacken_docs
+
+import blacken_docs_jb  # noqa: F401
 
 
 BLACK_MODE = black.FileMode(line_length=black.DEFAULT_LINE_LENGTH)
@@ -22,6 +23,20 @@ def test_format_src_markdown_simple():
     after, _ = blacken_docs.format_str(before, BLACK_MODE)
     assert after == (
         '```python\n'
+        'f(1, 2, 3)\n'
+        '```\n'
+    )
+
+
+def test_format_src_markdown_code_cell():
+    before = (
+        '```{code-cell} python\n'
+        'f(1,2,3)\n'
+        '```\n'
+    )
+    after, _ = blacken_docs.format_str(before, BLACK_MODE)
+    assert after == (
+        '```{code-cell} python\n'
         'f(1, 2, 3)\n'
         '```\n'
     )
