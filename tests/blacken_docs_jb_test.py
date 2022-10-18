@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import black
-
 import blacken_docs
+
+import blacken_docs_jb  # noqa: F401
 
 
 BLACK_MODE = black.FileMode(line_length=black.DEFAULT_LINE_LENGTH)

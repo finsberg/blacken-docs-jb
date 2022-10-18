@@ -1,7 +1,7 @@
--   id: blacken-docs
-    name: blacken-docs
-    description: Run `black` on python code blocks in documentation files
-    entry: blacken-docs
+-   id: blacken-docs-jb
+    name: blacken-docs-jb
+    description: Run `black` on python code blocks in documentation files (also for jupyterbook)
+    entry: blacken-docs-jb
     language: python
     language_version: python3
     files: '\.(rst|md|markdown|py|tex)$'
