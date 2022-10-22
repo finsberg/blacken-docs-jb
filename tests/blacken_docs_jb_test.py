@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import black
+import pytest
 
 import blacken_docs_jb
 
@@ -550,6 +551,23 @@ def test_format_src_markdown_simple_code_cell_with_command():
     assert after == (
         '```{code-cell} python\n'
         '!pip install -m blacken_docs\n'
+        'f(1, 2, 3)\n'
+        '```\n'
+    )
+
+
+@pytest.mark.xfail(strict=True)
+def test_format_src_markdown_simple_code_cell_with_tag():
+    before = (
+        '```{code-cell} python\n'
+        ':tags: ["hide-input"]\n'
+        'f(1,2,3)\n'
+        '```\n'
+    )
+    after, _ = blacken_docs_jb.format_str(before, BLACK_MODE)
+    assert after == (
+        '```{code-cell} python\n'
+        ':tags: ["hide-input"]\n'
         'f(1, 2, 3)\n'
         '```\n'
     )
