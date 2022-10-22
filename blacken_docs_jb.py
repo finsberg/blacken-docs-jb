@@ -13,7 +13,6 @@ import black
 
 MD_RE = re.compile(
     r'(?P<before>^(?P<indent> *)```(\{code-cell\})?\s*python\n)'
-    r'(?P<magic>([%!]\s*[a-zA-Z0-9-\s|]*)*)'
     r'(?P<code>.*?)'
     r'(?P<after>^(?P=indent)```\s*$)',
     re.DOTALL | re.MULTILINE,
@@ -40,12 +39,17 @@ def format_str(
 
     def _md_match(match: Match[str]) -> str:
         code = textwrap.dedent(match['code'])
-        magic = textwrap.dedent(match['magic'])
+        is_code_cell = '{code-cell}' in match['before']
         with _collect_error(match):
-            code = black.format_str(code, mode=black_mode)
+            if is_code_cell:
+                code = black.format_cell(code, fast=True, mode=black_mode)
+                code += '\n'  # Add extra newline
+            else:
+                code = black.format_str(code, mode=black_mode)
+
         code = textwrap.indent(code, match['indent'])
-        return f'{match["before"]}{magic}{code}{match["after"]}'
-    # breakpoint()
+        return f'{match["before"]}{code}{match["after"]}'
+
     src = MD_RE.sub(_md_match, src)
     return src, errors
 
@@ -102,6 +106,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         target_versions=set(args.target_versions),
         line_length=args.line_length,
         string_normalization=not args.skip_string_normalization,
+        # is_ipynb=True,
+        # python_cell_magics={'timeit'},
     )
 
     retv = 0

@@ -89,6 +89,21 @@ def test_integration_ok(tmpdir, capsys):
     )
 
 
+def test_format_magic1(tmpdir, capsys):
+    f = tmpdir.join('f.md')
+    before = (
+        'Hello hello\n'
+        '```{code-cell} python\n'
+        '%timeit -n 5 -r 10 some_function()'
+        '```\n'
+        'world\n'
+    )
+    f.write(before)
+    assert not blacken_docs_jb.main((str(f),))
+    assert not capsys.readouterr()[1]
+    assert f.read() == before
+
+
 def test_integration_modifies(tmpdir, capsys):
     f = tmpdir.join('f.md')
     f.write(
@@ -498,10 +513,27 @@ def test_format_src_markdown_simple_code_cell_with_magic():
         '```\n'
     )
     after, _ = blacken_docs_jb.format_str(before, BLACK_MODE)
+
     assert after == (
         '```{code-cell} python\n'
-        '% matplotlib inline  \n'
+        '% matplotlib inline\n'
         'f(1, 2, 3)\n'
+        '```\n'
+    )
+
+
+def test_format_src_markdown_simple_code_cell_with_magic_and_comment():
+    before = (
+        '```{code-cell} python\n'
+        '% matplotlib inline  \n'
+        'f(1,2,3) # This is a comment\n'
+        '```\n'
+    )
+    after, _ = blacken_docs_jb.format_str(before, BLACK_MODE)
+    assert after == (
+        '```{code-cell} python\n'
+        '% matplotlib inline\n'
+        'f(1, 2, 3)  # This is a comment\n'
         '```\n'
     )
 
