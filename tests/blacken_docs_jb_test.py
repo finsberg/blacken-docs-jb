@@ -5,7 +5,10 @@ import black
 import blacken_docs_jb
 
 
-BLACK_MODE = black.FileMode(line_length=black.DEFAULT_LINE_LENGTH)
+BLACK_MODE = black.FileMode(
+    line_length=black.DEFAULT_LINE_LENGTH,
+    python_cell_magics=blacken_docs_jb.DEFAULT_CELL_MAGIC,
+)
 
 
 def test_format_src_trivial():
@@ -599,13 +602,25 @@ def test_script_magic():
     )
 
 
-def test_script_invalid_magic():
+def test_cython_with_newline():
     before = (
         '```{code-cell} python\n'
-        '%%%script echo skipping\n'
-        'f(1,2,3)\n'
+        '%%cython  \n'
+        '\n'
+        'import numpy as np\n'
+        'def f(u0,steps=1024):\n'
+        '    return u0\n'
         '```\n'
     )
-    after, errors = blacken_docs_jb.format_str(before, BLACK_MODE)
-    assert len(errors) == 1
-    assert isinstance(errors[0].exc, blacken_docs_jb.CmdParserError)
+    after, _ = blacken_docs_jb.format_str(before, BLACK_MODE)
+    assert after == (
+        '```{code-cell} python\n'
+        '%%cython\n'
+        '\n'
+        'import numpy as np\n'
+        '\n'
+        '\n'
+        'def f(u0, steps=1024):\n'
+        '    return u0\n'
+        '```\n'
+    )

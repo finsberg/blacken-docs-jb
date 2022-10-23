@@ -11,6 +11,8 @@ from typing import Sequence
 
 import black
 
+DEFAULT_CELL_MAGIC = {'timeit', 'script', 'cython'}
+
 MD_RE = re.compile(
     r'(?P<before>^(?P<indent> *)```(\{code-cell\})?\s*python\n)'
     r'(?P<code>.*?)'
@@ -19,23 +21,19 @@ MD_RE = re.compile(
 )
 
 TAG_RE = re.compile(
-    r'(?P<tag>(:tags:[\s]*[\[\"\-\]\w\d\s,_]*\n))'
+    r'(?P<tag>(:tags:( *)[\[\"\-\]\w\d ,_]*\n))'
     r'(?P<code>.*?)$',
     re.DOTALL | re.MULTILINE,
 )
 
 PERCENT_PERCENT_RE = re.compile(
-    r'(?P<cmd>(%%[\s]*[\[\"\-\]\w\d\s,_]*\n))'
+    r'(?P<cmd>(%%( *)[\[\"\-\]\w\d ,_]*)\n)'
     r'(?P<code>.*?)$',
     re.DOTALL | re.MULTILINE,
 )
 
 
 class TagParserError(RuntimeError):
-    pass
-
-
-class CmdParserError(RuntimeError):
     pass
 
 
@@ -61,9 +59,11 @@ def format_str(
         code = textwrap.dedent(match['code'])
         is_code_cell = '{code-cell}' in match['before']
         tags = ''
-        pps = ''
+        # pps = ''
         has_tag = code.startswith(':tags:')
-        has_pp = code.startswith('%%')
+        # has_pp = code.startswith('%%')
+
+        # breakpoint()
 
         with _collect_error(match):
             if has_tag:
@@ -74,13 +74,13 @@ def format_str(
                 else:
                     raise TagParserError(code)
 
-            if has_pp:
-                pp_match = PERCENT_PERCENT_RE.match(code)
-                if pp_match is not None:
-                    pps = pp_match['cmd']
-                    code = pp_match['code']
-                else:
-                    raise CmdParserError(code)
+            # if has_pp:
+            #     pp_match = PERCENT_PERCENT_RE.match(code)
+            #     if pp_match is not None:
+            #         pps = pp_match['cmd']
+            #         code = pp_match['code']
+            #     else:
+            #         raise CmdParserError(code)
 
             if is_code_cell:
                 code = black.format_cell(code, fast=True, mode=black_mode)
@@ -89,7 +89,7 @@ def format_str(
                 code = black.format_str(code, mode=black_mode)
 
         code = textwrap.indent(code, match['indent'])
-        return f'{match["before"]}{tags}{pps}{code}{match["after"]}'
+        return f'{match["before"]}{tags}{code}{match["after"]}'
 
     src = MD_RE.sub(_md_match, src)
     return src, errors
@@ -147,8 +147,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         target_versions=set(args.target_versions),
         line_length=args.line_length,
         string_normalization=not args.skip_string_normalization,
-        # is_ipynb=True,
-        # python_cell_magics={'timeit'},
+        python_cell_magics=DEFAULT_CELL_MAGIC,
     )
 
     retv = 0
