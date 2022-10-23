@@ -569,3 +569,43 @@ def test_format_src_markdown_simple_code_cell_with_tag():
         'f(1, 2, 3)\n'
         '```\n'
     )
+
+
+def test_invalid_tag_raises_TagParserError():
+    before = (
+        '```{code-cell} python\n'
+        ':tags: :tags["hide-input", "another_tag"]\n'
+        'f(1,2,3)\n'
+        '```\n'
+    )
+    after, errors = blacken_docs_jb.format_str(before, BLACK_MODE)
+    assert len(errors) == 1
+    assert isinstance(errors[0].exc, blacken_docs_jb.TagParserError)
+
+
+def test_script_magic():
+    before = (
+        '```{code-cell} python\n'
+        '%%script echo skipping\n'
+        'f(1,2,3)\n'
+        '```\n'
+    )
+    after, _ = blacken_docs_jb.format_str(before, BLACK_MODE)
+    assert after == (
+        '```{code-cell} python\n'
+        '%%script echo skipping\n'
+        'f(1, 2, 3)\n'
+        '```\n'
+    )
+
+
+def test_script_invalid_magic():
+    before = (
+        '```{code-cell} python\n'
+        '%%%script echo skipping\n'
+        'f(1,2,3)\n'
+        '```\n'
+    )
+    after, errors = blacken_docs_jb.format_str(before, BLACK_MODE)
+    assert len(errors) == 1
+    assert isinstance(errors[0].exc, blacken_docs_jb.CmdParserError)

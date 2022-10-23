@@ -18,23 +18,25 @@ MD_RE = re.compile(
     re.DOTALL | re.MULTILINE,
 )
 
-# TAG_RE = re.compile(
-#     r'(?P<tag>:tags: \[\"hide\-input\"\]\n)'
-#     r'(?P<code>.*?)$',
-#     re.DOTALL | re.MULTILINE,
-# )
-
 TAG_RE = re.compile(
-    r'(?P<tag>(:tags: [\[\"\-\]\w\d\s,_]*\n))'
+    r'(?P<tag>(:tags:[\s]*[\[\"\-\]\w\d\s,_]*\n))'
     r'(?P<code>.*?)$',
     re.DOTALL | re.MULTILINE,
 )
 
-# TAG_RE = re.compile(
-#     r':tags: ["hide\-input"]\nf(1,2,3)\n',
-# )
-# p = re.compile(':tags: \[\"hide\-')
-# p.match(':tags: ["hide-')
+PERCENT_PERCENT_RE = re.compile(
+    r'(?P<cmd>(%%[\s]*[\[\"\-\]\w\d\s,_]*\n))'
+    r'(?P<code>.*?)$',
+    re.DOTALL | re.MULTILINE,
+)
+
+
+class TagParserError(RuntimeError):
+    pass
+
+
+class CmdParserError(RuntimeError):
+    pass
 
 
 class CodeBlockError(NamedTuple):
@@ -59,13 +61,27 @@ def format_str(
         code = textwrap.dedent(match['code'])
         is_code_cell = '{code-cell}' in match['before']
         tags = ''
-        if ':tags:' in code:
-            tag_match = TAG_RE.match(code)
-            if tag_match is not None:
-                tags = tag_match['tag']
-                code = tag_match['code']
+        pps = ''
+        has_tag = code.startswith(':tags:')
+        has_pp = code.startswith('%%')
 
         with _collect_error(match):
+            if has_tag:
+                tag_match = TAG_RE.match(code)
+                if tag_match is not None:
+                    tags = tag_match['tag']
+                    code = tag_match['code']
+                else:
+                    raise TagParserError(code)
+
+            if has_pp:
+                pp_match = PERCENT_PERCENT_RE.match(code)
+                if pp_match is not None:
+                    pps = pp_match['cmd']
+                    code = pp_match['code']
+                else:
+                    raise CmdParserError(code)
+
             if is_code_cell:
                 code = black.format_cell(code, fast=True, mode=black_mode)
                 code += '\n'  # Add extra newline
@@ -73,7 +89,7 @@ def format_str(
                 code = black.format_str(code, mode=black_mode)
 
         code = textwrap.indent(code, match['indent'])
-        return f'{match["before"]}{tags}{code}{match["after"]}'
+        return f'{match["before"]}{tags}{pps}{code}{match["after"]}'
 
     src = MD_RE.sub(_md_match, src)
     return src, errors
