@@ -349,6 +349,23 @@ def test_format_src_indented_markdown_code_cell():
     )
 
 
+def test_cython():
+    before = (
+        '```{code-cell} python\n'
+        '%%cython\n'
+        '\n'
+        'def ctriangle_v2(int n):\n'
+        '    cdef int i\n'
+        '    cdef int total = 0\n'
+        '    for i in range(1, n+1):\n'
+        '        total += i\n'
+        '    return total\n'
+        '```\n'
+    )
+    after, _ = blacken_docs_jb.format_str(before, BLACK_MODE)
+    assert after == before
+
+
 def test_integration_ok_code_cell(tmpdir, capsys):
     f = tmpdir.join('f.md')
     f.write(
@@ -618,29 +635,5 @@ def test_script_magic():
         '```{code-cell} python\n'
         '%%script echo skipping\n'
         'f(1, 2, 3)\n'
-        '```\n'
-    )
-
-
-def test_cython_with_newline():
-    before = (
-        '```{code-cell} python\n'
-        '%%cython  \n'
-        '\n'
-        'import numpy as np\n'
-        'def f(u0,steps=1024):\n'
-        '    return u0\n'
-        '```\n'
-    )
-    after, _ = blacken_docs_jb.format_str(before, BLACK_MODE)
-    assert after == (
-        '```{code-cell} python\n'
-        '%%cython\n'
-        '\n'
-        'import numpy as np\n'
-        '\n'
-        '\n'
-        'def f(u0, steps=1024):\n'
-        '    return u0\n'
         '```\n'
     )

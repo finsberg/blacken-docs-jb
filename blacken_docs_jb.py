@@ -61,6 +61,8 @@ def format_str(
         tags = ''
         has_tag = code.startswith(':tags:')
 
+        cython_magic = '%%cython' in code
+
         with _collect_error(match):
             if has_tag:
                 tag_match = TAG_RE.match(code)
@@ -70,11 +72,12 @@ def format_str(
                 else:
                     raise TagParserError(code)
 
-            if is_code_cell:
-                code = black.format_cell(code, fast=True, mode=black_mode)
-                code += '\n'  # Add extra newline
-            else:
-                code = black.format_str(code, mode=black_mode)
+            if not cython_magic:  # Do not run black on cython code
+                if is_code_cell:
+                    code = black.format_cell(code, fast=True, mode=black_mode)
+                    code += '\n'  # Add extra newline
+                else:
+                    code = black.format_str(code, mode=black_mode)
 
         code = textwrap.indent(code, match['indent'])
         return f'{match["before"]}{tags}{code}{match["after"]}'
