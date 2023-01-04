@@ -22,7 +22,7 @@ MD_RE = re.compile(
 
 TAG_RE = re.compile(
     r'(?P<tag>(:tags:( *)[\[\"\-\]\w\d ,_]*\n))'
-    r'(?P<code>.*?)$',
+    r'(?P<code>.*$)',
     re.DOTALL | re.MULTILINE,
 )
 
@@ -59,11 +59,7 @@ def format_str(
         code = textwrap.dedent(match['code'])
         is_code_cell = '{code-cell}' in match['before']
         tags = ''
-        # pps = ''
         has_tag = code.startswith(':tags:')
-        # has_pp = code.startswith('%%')
-
-        # breakpoint()
 
         with _collect_error(match):
             if has_tag:
@@ -73,14 +69,6 @@ def format_str(
                     code = tag_match['code']
                 else:
                     raise TagParserError(code)
-
-            # if has_pp:
-            #     pp_match = PERCENT_PERCENT_RE.match(code)
-            #     if pp_match is not None:
-            #         pps = pp_match['cmd']
-            #         code = pp_match['code']
-            #     else:
-            #         raise CmdParserError(code)
 
             if is_code_cell:
                 code = black.format_cell(code, fast=True, mode=black_mode)

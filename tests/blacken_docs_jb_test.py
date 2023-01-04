@@ -76,6 +76,26 @@ def test_format_src_indented_markdown():
     )
 
 
+def test_code_cell_with_tags():
+    before = (
+        '```{code-cell} python\n'
+        ':tags: ["hide-input"]\n'
+        '\n'
+        'import numpy as np\n'
+        'x=1\n'
+        '```\n'
+    )
+    after, _ = blacken_docs_jb.format_str(before, BLACK_MODE)
+    assert after == (
+        '```{code-cell} python\n'
+        ':tags: ["hide-input"]\n'
+        'import numpy as np\n'
+        '\n'
+        'x = 1\n'
+        '```\n'
+    )
+
+
 def test_integration_ok(tmpdir, capsys):
     f = tmpdir.join('f.md')
     f.write(
