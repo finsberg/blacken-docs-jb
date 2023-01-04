@@ -4,12 +4,21 @@ import argparse
 import contextlib
 import re
 import textwrap
+from importlib.metadata import metadata
 from typing import Generator
 from typing import Match
 from typing import NamedTuple
 from typing import Sequence
 
 import black
+
+
+meta = metadata('blacken_docs_jb')
+__version__ = meta['Version']
+__author__ = meta['Author']
+__license__ = meta['License']
+__email__ = meta['Author-email']
+__program_name__ = meta['Name']
 
 DEFAULT_CELL_MAGIC = {'timeit', 'script', 'cython'}
 
@@ -132,6 +141,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     parser.add_argument('-E', '--skip-errors', action='store_true')
     parser.add_argument('filenames', nargs='*')
+    parser.add_argument(
+        '--version', help='Display the version of blacken-docs-js',
+        action='version',
+        version=f'%(prog)s {__version__}',
+    )
     args = parser.parse_args(argv)
 
     black_mode = black.FileMode(
