@@ -22,7 +22,7 @@ Sample `.pre-commit-config.yaml`:
 
 ```yaml
 - repo: https://github.com/finsberg/blacken-docs-jb
-    rev: v0.6.1
+    rev: v0.6.2
     hooks:
       - id: blacken-docs-jb
         additional_dependencies: [black==22.3.0]
